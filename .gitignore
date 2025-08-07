@@ -1,0 +1,18 @@
+# Ignore node_modules everywhere
+**/node_modules/
+
+# Ignore API credentials
+api/credentials.json
+
+# Ignore environment files
+*.env
+
+# Ignore build artifacts
+dist/
+build/
+
+# Ignore logs
+*.log
+
+# MacOS system files
+.DS_Store
