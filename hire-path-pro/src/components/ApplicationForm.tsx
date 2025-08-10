@@ -76,18 +76,30 @@ export default function ApplicationForm() {
 
   // 🔐 Check if user is logged in
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (!data.user || error) {
-        setAuthenticated(false); // ❌ Not logged in
-        router("/login"); // Redirect to login page
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        setAuthenticated(true);
       } else {
-        setAuthenticated(true); // ✅ Logged in
+        setAuthenticated(false);
+        router("/login");
       }
+    });
+  
+    // Also check immediately in case already logged in
+    supabase.auth.getUser().then(({ data, error }) => {
+      if (!data.user || error) {
+        setAuthenticated(false);
+        router("/login");
+      } else {
+        setAuthenticated(true);
+      }
+    });
+  
+    return () => {
+      listener.subscription.unsubscribe();
     };
-
-    checkAuth();
   }, []);
+  
 
   // ⏳ Optional loading state
   if (authenticated === null) {
