@@ -1,79 +1,62 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<"email" | "otp">("email");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [otpSent, setOtpSent] = useState(false);
+  const router = useNavigate();
 
-  // Step 1 - Send OTP
+  // Step 1: Send OTP
   const handleSendOtp = async () => {
     if (!email) {
       alert("Please enter your email");
       return;
     }
     setLoading(true);
-
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        shouldCreateUser: false, // Prevents new user creation
-        emailRedirectTo: undefined // Avoid magic link
-      }
+      options: { shouldCreateUser: false }
     });
-
     setLoading(false);
+
     if (error) {
-      alert("Error sending OTP: " + error.message);
+      alert("Failed to send OTP: " + error.message);
     } else {
       alert("OTP sent to your email");
-      setStep("otp");
+      setOtpSent(true);
     }
   };
 
-  // Step 2 - Verify OTP
+  // Step 2: Verify OTP
   const handleVerifyOtp = async () => {
     if (!otp) {
       alert("Please enter the OTP");
       return;
     }
     setLoading(true);
-
     const { data, error } = await supabase.auth.verifyOtp({
       email,
       token: otp,
       type: "email"
     });
-
     setLoading(false);
+
     if (error) {
-      alert("OTP verification failed: " + error.message);
-    } else {
+      alert("Invalid OTP: " + error.message);
+    } else if (data.session) {
       alert("Login successful!");
-      navigate("/"); // Redirect to your main page
+      router("/"); // ✅ Redirect to ApplicationForm
     }
   };
-
-  // Listen for auth state changes
-  useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
-        navigate("/");
-      }
-    });
-    return () => {
-      listener.subscription.unsubscribe();
-    };
-  }, []);
 
   return (
     <div className="max-w-md mx-auto mt-20 space-y-4 text-center">
       <h1 className="text-2xl font-bold">Supervisor Login</h1>
 
-      {step === "email" && (
+      {!otpSent ? (
         <>
           <input
             className="border p-2 w-full"
@@ -86,12 +69,10 @@ export default function LoginPage() {
             className="bg-blue-600 text-white px-4 py-2 rounded w-full mt-2"
             disabled={loading}
           >
-            {loading ? "Sending OTP..." : "Send OTP"}
+            {loading ? "Sending..." : "Send OTP"}
           </button>
         </>
-      )}
-
-      {step === "otp" && (
+      ) : (
         <>
           <input
             className="border p-2 w-full"
@@ -106,12 +87,6 @@ export default function LoginPage() {
           >
             {loading ? "Verifying..." : "Verify OTP"}
           </button>
-          <p
-            className="text-blue-500 cursor-pointer mt-2"
-            onClick={() => setStep("email")}
-          >
-            Change Email
-          </p>
         </>
       )}
     </div>
