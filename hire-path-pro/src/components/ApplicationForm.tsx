@@ -74,7 +74,6 @@ export default function ApplicationForm() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null); // track auth state
   const router = useNavigate(); // Adjust if using react-router or next/router
 
-  // 🔐 Check if user is logged in
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
@@ -84,8 +83,8 @@ export default function ApplicationForm() {
         router("/login");
       }
     });
-  
-    // Also check immediately in case already logged in
+
+    // Check immediately on mount
     supabase.auth.getUser().then(({ data, error }) => {
       if (!data.user || error) {
         setAuthenticated(false);
@@ -94,11 +93,11 @@ export default function ApplicationForm() {
         setAuthenticated(true);
       }
     });
-  
+
     return () => {
       listener.subscription.unsubscribe();
     };
-  }, []);
+  }, [router]);
   
 
   // ⏳ Optional loading state

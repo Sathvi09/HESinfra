@@ -10,6 +10,7 @@ export default function LoginPage() {
   const router = useNavigate();
 
   const handleSendOtp = async () => {
+    if (!email) return alert("Please enter your email");
     setLoading(true);
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -26,6 +27,7 @@ export default function LoginPage() {
   };
 
   const handleVerifyOtp = async () => {
+    if (!otp) return alert("Please enter OTP");
     setLoading(true);
     const { data, error } = await supabase.auth.verifyOtp({
       email,
@@ -38,27 +40,18 @@ export default function LoginPage() {
       alert("Invalid OTP: " + error.message);
     } else {
       alert("Login successful!");
-      
-      // ✅ Wait for Supabase to update session
-      setTimeout(async () => {
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (sessionData.session) {
-          router("/"); // Redirect to form page
-        } else {
-          alert("Session not ready yet. Please try again.");
-        }
-      }, 500); // Small delay to allow session persistence
+      router("/"); // ✅ Redirect immediately
     }
   };
 
-  // Auto-redirect if already logged in
+  // If already logged in, go to form
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) {
         router("/");
       }
     });
-  }, []);
+  }, [router]);
 
   return (
     <div className="max-w-md mx-auto mt-20 space-y-4 text-center">

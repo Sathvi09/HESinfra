@@ -1,7 +1,1 @@
 project_id = "dkweqagjqqebewmcrfyi"
-
-[functions.verify_identity]
-enabled = true
-verify_jwt = false
-import_map = "./functions/verify_identity/deno.json"
-entrypoint = "./functions/verify_identity/index.ts"
