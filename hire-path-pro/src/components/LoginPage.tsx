@@ -1,56 +1,64 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [loading, setLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useNavigate();
 
-  // Step 1: Send OTP
   const handleSendOtp = async () => {
-    if (!email) {
-      alert("Please enter your email");
-      return;
-    }
     setLoading(true);
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: false }
+      options: { shouldCreateUser: false },
     });
     setLoading(false);
 
     if (error) {
-      alert("Failed to send OTP: " + error.message);
+      alert("Error sending OTP: " + error.message);
     } else {
-      alert("OTP sent to your email");
       setOtpSent(true);
+      alert("OTP sent to your email");
     }
   };
 
-  // Step 2: Verify OTP
   const handleVerifyOtp = async () => {
-    if (!otp) {
-      alert("Please enter the OTP");
-      return;
-    }
     setLoading(true);
     const { data, error } = await supabase.auth.verifyOtp({
       email,
       token: otp,
-      type: "email"
+      type: "email",
     });
     setLoading(false);
 
     if (error) {
       alert("Invalid OTP: " + error.message);
-    } else if (data.session) {
+    } else {
       alert("Login successful!");
-      router("/"); // ✅ Redirect to ApplicationForm
+      
+      // ✅ Wait for Supabase to update session
+      setTimeout(async () => {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData.session) {
+          router("/"); // Redirect to form page
+        } else {
+          alert("Session not ready yet. Please try again.");
+        }
+      }, 500); // Small delay to allow session persistence
     }
   };
+
+  // Auto-redirect if already logged in
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        router("/");
+      }
+    });
+  }, []);
 
   return (
     <div className="max-w-md mx-auto mt-20 space-y-4 text-center">
