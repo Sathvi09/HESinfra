@@ -139,7 +139,7 @@ export default function DrivingLicenseStep({
       const formData = new FormData();
       formData.append("licence_file", licenseFile);
   
-      const response = await fetch("http://localhost:8000/verify-driving-licence", {
+      const response = await fetch("https://hesinfra.onrender.com/verify-driving-licence", {
         method: "POST",
         body: formData,
       });

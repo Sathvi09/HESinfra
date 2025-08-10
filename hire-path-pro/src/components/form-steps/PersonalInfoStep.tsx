@@ -156,7 +156,7 @@ export default function PersonalInfoStep({
       formData.append("aadhaar_file", aadhaarFile);
       formData.append("pan_file", panFile);
   
-      const response = await fetch("http://127.0.0.1:8000/verify-identity", {
+      const response = await fetch("https://hesinfra.onrender.com/verify-identity", {
         method: "POST",
         body: formData,
       });
