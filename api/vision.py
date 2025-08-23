@@ -68,22 +68,31 @@ def parse_aadhaar(text: str):
     if mobile_match:
         data["mobile_number"] = mobile_match.group(0)
 
-    # Address (look for "To")
+     # Name (2nd line after "To")
     if "To" in lines:
         idx = lines.index("To")
-        address_lines = []
-        for l in lines[idx+1:]:
-            if re.search(r"\d{4}\s\d{4}\s\d{4}", l):  # stop at Aadhaar number
+        if idx + 2 < len(lines):
+            data["name"] = lines[idx + 2]
+
+    # Address (from 4th line after "To" until mobile number)
+    address_lines = []
+    if "To" in lines:
+        idx = lines.index("To")
+        for l in lines[idx+4:]:
+            if re.match(r"\b[6-9]\d{9}\b", l):  # stop at mobile number
+                break
+            if "aadhaar" in l.lower():
                 break
             address_lines.append(l)
-        if address_lines:
-            data["address"] = ", ".join(address_lines)
 
-            # Extract state
-            for st in INDIAN_STATES:
-                if st.lower() in data["address"].lower():
-                    data["state"] = st
-                    break
+    if address_lines:
+        data["address"] = ", ".join(address_lines)
+
+        # Extract state from address lines
+        for st in INDIAN_STATES:
+            if any(st.lower() in l.lower() for l in address_lines):
+                data["state"] = st
+                break
 
     return data
 

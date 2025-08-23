@@ -117,7 +117,16 @@ export default function PersonalInfoStep({
       const result = await res.json();
 
       if (result.fullName) setValue("fullName", result.fullName);
-      if (result.dateOfBirth) setValue("dateOfBirth", result.dateOfBirth);
+      if (result.dateOfBirth) {
+        // Convert DD/MM/YYYY or DD-MM-YYYY -> YYYY-MM-DD
+        const parts = result.dateOfBirth.split(/[\/-]/);
+        if (parts.length === 3) {
+          const formatted = `${parts[2]}-${parts[1]}-${parts[0]}`; // "1992-12-14"
+          setValue("dateOfBirth", formatted);
+        } else {
+          setValue("dateOfBirth", result.dateOfBirth);
+        }
+      }
       if (result.presentAddress) setValue("presentAddress", result.presentAddress);
       if (result.state) setValue("state", result.state);
       if (result.mobileNumber) setValue("phoneNumber", result.mobileNumber);
@@ -276,13 +285,18 @@ export default function PersonalInfoStep({
         </div>
         <div>
           <Label>State *</Label>
-          <Select onValueChange={(v) => setValue("state", v)}>
+          <Select
+            value={watch("state") || ""}
+            onValueChange={(v) => setValue("state", v)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select state" />
             </SelectTrigger>
             <SelectContent>
               {INDIAN_STATES.map((st) => (
-                <SelectItem key={st} value={st}>{st}</SelectItem>
+                <SelectItem key={st} value={st}>
+                  {st}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
