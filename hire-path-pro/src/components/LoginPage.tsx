@@ -13,10 +13,10 @@ export default function LoginPage() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: false },
+      options: { shouldCreateUser: true }, // allow signup via OTP
     });
     setLoading(false);
-
+  
     if (error) {
       alert("Error sending OTP: " + error.message);
     } else {
